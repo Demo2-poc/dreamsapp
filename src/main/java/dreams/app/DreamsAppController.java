@@ -1,5 +1,6 @@
 package dreams.app;
 
+import org.apache.log4j.Logger;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,10 +34,12 @@ public class DreamsAppController {
 	@Autowired
 	@Qualifier("redisTemplate")
 	private RedisTemplate<String, String> redisTemplate;
-	
+	final static Logger logger = Logger.getLogger(DreamsAppController.class);
 	@RequestMapping(value="/storereservationpayload",method = RequestMethod.POST,consumes = "application/xml")
 	public ResponseEntity<String> processPayloadAsXML(@RequestBody String payLoad) {
 		
+		long startTime = System.currentTimeMillis();
+		logger.debug("started processPayloadAsXML service is invoked start time in ms ="+startTime); 
 		ResponseEntity<String> respEntity = null;
 		try{
 			ReservationPayload reservationPayload =  XmlParser.xmlStringToPojoObject(payLoad);
@@ -53,10 +56,12 @@ public class DreamsAppController {
 			respEntity = new ResponseEntity<String>(" Published Successfully ",HttpStatus.OK);
 			
 		}catch (Exception e) {
+			logger.error(e.getMessage());
 			respEntity = new ResponseEntity<String>(" Failed to publish ",HttpStatus.INTERNAL_SERVER_ERROR);
 			e.printStackTrace();
 		}
-		
+		long durationTaken = System.currentTimeMillis() - startTime;
+		logger.debug("total time taken to process request ms ="+durationTaken); 
 		return respEntity;
 	}
 
@@ -69,16 +74,19 @@ public class DreamsAppController {
 	
 	@RequestMapping(value="/providereservationpayload",method = RequestMethod.GET)
 	public ResponseEntity<String> providePayloadContent(@RequestParam("canonicalId") String cannonicalId) {
-		
+		long startTime = System.currentTimeMillis();
+		logger.debug("started providePayloadContent service is invoked start time in ms ="+startTime); 
 		ResponseEntity<String> respEntity = null;
 		try{
 			String payload = dreamsPersistService.providePayLoad(cannonicalId);
 			respEntity = new ResponseEntity<String>(payload,HttpStatus.OK);
 		}catch (Exception e) {
+			logger.error(e.getMessage());
 			respEntity = new ResponseEntity<String>("",HttpStatus.INTERNAL_SERVER_ERROR);
 			e.printStackTrace();
 		}
-		
+		long durationTaken = System.currentTimeMillis() - startTime;
+		logger.debug("total time taken to process request ms ="+durationTaken); 
 		return respEntity;
 	}
 
